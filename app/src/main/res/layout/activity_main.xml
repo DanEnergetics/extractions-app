@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <!-- Date -->
+    <TextView
+        android:id="@+id/textViewDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date: "
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Numerical Values -->
+    <EditText
+        android:id="@+id/editTextValue1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Value 1"/>
+
+    <EditText
+        android:id="@+id/editTextValue2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Value 2"
+        android:layout_below="@id/editTextValue1"/>
+
+    <EditText
+        android:id="@+id/editTextValue3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Value 3"
+        android:layout_below="@id/editTextValue2"/>
+
+    <!-- Time in Seconds -->
+    <EditText
+        android:id="@+id/editTextTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Time (seconds)"
+        android:layout_below="@id/editTextValue3"/>
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/buttonSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editTextTime"
+        android:layout_alignParentEnd="true"
+        android:text="Save"/>
+
+    <!-- List View -->
+    <ListView
+        android:id="@+id/listViewData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/buttonSave"
+        android:layout_marginTop="16dp"/>
+</RelativeLayout>
