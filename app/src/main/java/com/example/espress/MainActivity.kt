@@ -16,27 +16,29 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,9 +47,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -60,17 +66,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.window.Popup
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.room.Room
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
@@ -97,7 +111,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App(
     extractionViewModel: AppViewModel = viewModel(),
@@ -128,42 +141,54 @@ fun AppLayout(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showBeanEditView by remember { mutableStateOf(false) }
     var isNewExtraction by remember { mutableStateOf(true) }
     var editExtraction by remember { mutableStateOf(Extraction()) }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    showBottomSheet = true
+            Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                FloatingActionButton(
+                    onClick = {
+                        showBeanEditView = true
+                    }
+                ) {
+                    Icon(Icons.Filled.ShoppingCart, contentDescription = "")
                 }
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "")
+                FloatingActionButton(
+                    onClick = {
+                        showBottomSheet = true
+                    }
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "")
+                }
             }
         },
         topBar = {
-            Row(Modifier.padding(10.dp)) {
-                Icon(
-                    Icons.Default.Menu,
-                    contentDescription = "Menu",
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    "Extractions",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.headlineLarge,
-                )
-            }
-        },
+            TopAppBar(
+                title = { Text("Extractions") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                ),
+                navigationIcon = {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu",
+                        )
+                    }
+                }
+            )
+        }
     ) { contentPadding ->
         // Screen content
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues = contentPadding)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 8.dp),
             contentPadding = PaddingValues(bottom=50.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(extractions) {extraction ->
                 RowEntry(
@@ -198,12 +223,7 @@ fun AppLayout(
             if (!isNewExtraction)
                 stopwatch?.set(editExtraction.duration)
 
-            val bottomPadding = WindowInsets.navigationBars.asPaddingValues()
-                .calculateBottomPadding().value.toInt().dp
-
             ModalBottomSheet(
-//                modifier = Modifier.padding(contentPadding)
-//                    .padding(top = 0.dp, start = 0.dp, end = 0.dp, bottom = bottomPadding),
                 onDismissRequest = {
                     showBottomSheet = false
                     stopwatch?.reset()
@@ -229,8 +249,14 @@ fun AppLayout(
                     title = title,
                     action = action,
                     bottomPadding = contentPadding.calculateBottomPadding(),
-//                    contentPadding = contentPadding.,
                 )
+            }
+        } else if (showBeanEditView) {
+            ModalBottomSheet(
+                onDismissRequest = { showBeanEditView = false },
+                sheetState = sheetState,
+            ) {
+                EditBeanView()
             }
         }
     }
@@ -428,32 +454,70 @@ fun ScrollBox(
     }
 }
 
+@Preview
 @Composable
-fun StopwatchBox(stopwatch: StopwatchViewModel.Stopwatch) {
-    val clockState by stopwatch.state.collectAsState()
-    val clockTime by stopwatch.timer.collectAsState()
-    MyRow {
-        DataText("Duration", Modifier.width(60.dp))
-        Spacer(Modifier.width(20.dp))
-        IconButton(onClick = { stopwatch.play() }, Modifier.wrapContentWidth()) {
-            Icon(
-                when (clockState) {
-                    StopwatchState.Idle -> painterResource(id = R.drawable.baseline_play_circle_24)
-                    StopwatchState.Running -> painterResource(id = R.drawable.baseline_pause_circle_24)
-                    StopwatchState.Paused -> painterResource(id = R.drawable.baseline_play_circle_24)
-                },
-                contentDescription = "Play or pause stopwatch"
-            )
-        }
-        if (clockState == StopwatchState.Running || clockState == StopwatchState.Paused) {
-            IconButton(onClick = { stopwatch.reset() }) {
-                Icon(Icons.Rounded.Clear, contentDescription = "Reset stopwatch")
+fun SelectBeanBox(
+    beans: List<Bean> = listOf(
+        Bean("Kaapi", "01.01.2024"),
+        Bean("Italienischer", "03.04.2024"),
+        Bean("Black Edition", "19.04.2024"),
+    ),
+    lastBean: Bean = Bean("Black Edition", "19.04.2024"),
+) {
+    SelectBox(
+        beans.map { bean -> bean.name.orEmpty() },
+        lastBean.name.orEmpty(),
+        label = "Bean",
+        readOnly = false,
+        onSelected = {},
+    )
+}
+
+@Composable
+fun SelectBox(
+    texts: List<String>,
+    defaultText: String,
+    label: String,
+    readOnly: Boolean,
+    onSelected: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedText by remember { mutableStateOf(defaultText) }
+    var size by remember { mutableStateOf(Size.Zero) }
+
+    val icon = if (expanded)
+        Icons.Filled.KeyboardArrowUp
+    else
+        Icons.Filled.KeyboardArrowDown
+
+    Column(Modifier.padding(16.dp)) {
+        OutlinedTextField(
+            value = selectedText,
+            onValueChange = { selectedText = it; onSelected() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coordinates -> size = coordinates.size.toSize() },
+            label = { Text(label) },
+            trailingIcon = { Icon(icon, "Expand options",
+                Modifier.clickable { expanded = !expanded }) },
+            readOnly = readOnly,
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.width(with(LocalDensity.current) {size.width.toDp()})
+        ) {
+            texts.forEach {
+                DropdownMenuItem(
+                    text = { Text(text = it) },
+                    onClick = { selectedText = it; expanded = false; onSelected() }
+                )
             }
         }
-        Spacer(Modifier.weight(1f))
-        DataText(clockTime.formatTime(), modifier = Modifier.align(Alignment.CenterVertically))
     }
 }
+
 
 @Preview
 @Composable
@@ -552,6 +616,7 @@ fun EditDataView(
                 Text(action)
             }
         }
+        SelectBeanBox()
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ScrollBox(
                 stringResource(id = R.string.grind_time),
@@ -582,5 +647,110 @@ fun EditDataView(
             steps = 20,
             decimal = 2,
         ) { extractionSetter(extraction.copy(grind = it)) }
+    }
+}
+
+fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
+@Preview
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDocked() {
+    var showDatePicker by remember { mutableStateOf(true) }
+    val datePickerState = rememberDatePickerState()
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        convertMillisToDate(it)
+    } ?: ""
+
+    Box(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedDate,
+            onValueChange = { },
+            label = { Text("DOB") },
+            readOnly = true,
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Select date"
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+        )
+
+        if (showDatePicker) {
+            Popup(
+                onDismissRequest = { showDatePicker = false },
+                alignment = Alignment.BottomStart
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .offset(y = 64.dp)
+                        .shadow(elevation = 4.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
+                ) {
+                    DatePicker(
+                        state = datePickerState,
+                        showModeToggle = false
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun EditBeanView(
+    title: String = "Create Beans",
+    bottomPadding: Dp = 0.dp,
+    action: String = "Save",
+    onAction: () -> Unit = {},
+) {
+    val beans = listOf(
+        Bean("Kaapi", "01.01.2024"),
+        Bean("Italienischer", "03.04.2024"),
+        Bean("Black Edition", "19.04.2024"),
+    )
+    val lastBean = beans.last()
+    val beanNames = beans.map { it.name.orEmpty() }
+    Column (modifier = Modifier
+        .padding(10.dp)
+        .padding(bottom = bottomPadding),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = onAction,
+            ) {
+                Text(action)
+            }
+        }
+
+        SelectBox(
+            texts = beanNames,
+            defaultText = lastBean.name.orEmpty(),
+            label = "Beans",
+            readOnly = false,
+            onSelected = {}
+        )
+
+        DatePickerDocked()
     }
 }

@@ -12,15 +12,21 @@ import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
+
+data class Bean (
+    val name: String?,
+    @ColumnInfo(name = "date_purchased") val datePurchased: String?,
+)
+
 @Entity
 data class Extraction (
     @PrimaryKey(autoGenerate = true) val uid: Int = 0,
-    @ColumnInfo(name = "duration") val duration: Long = 0L,
-    @ColumnInfo(name = "grind") val grind: Float = 0f,
+    val duration: Long = 0L,
+    val grind: Float = 0f,
     @ColumnInfo(name = "grind_time") val grindTime: Long = 0L,
-    @ColumnInfo(name = "time") val time: String = "",
-    @ColumnInfo(name = "yield") val yield: Float = 0f,
-//    @ColumnInfo(name = "beans") val beans: String = "",
+    val time: String = "",
+    val yield: Float = 0f,
+//    @Embedded val bean: Bean? = null,
 //    @ColumnInfo(name = "dose") val dose: Float = 0f,
 //    @ColumnInfo(name = "temperature") val temperature: Float = 0f,
 ) {
@@ -30,6 +36,14 @@ data class Extraction (
         grindTime = this.grindTime.coerceIn(grindTimeRange)
     )
 }
+
+
+//data class BeanWithExtractions (
+//    @Embedded val bean: Bean,
+//    @Relation(
+//        parentColumn =
+//    )
+//)
 
 @Dao
 interface ExtractionDao {
@@ -48,7 +62,7 @@ interface ExtractionDao {
 
 @Database(
     entities = [Extraction::class],
-    version = 4,
+    version = 5,
 //    autoMigrations = [
 //        AutoMigration(from = 1, to = 2, spec = AppDatabase.MyAutoMigration::class)
 //    ]
